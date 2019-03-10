@@ -1,2 +1,2 @@
 # mss
-mss
+MSS project home

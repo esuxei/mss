@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+{% block title %} Inventory Management System | Warehouse {% endblock title %}
+
+{% block stylesheets %}
+  {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/datatables/dataTables.bootstrap4.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/datatables/responsive.bootstrap4.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/datatables/dataTables.responsive.min.js' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/datatables/buttons.bootstrap4.min.css' %}">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<style>
+.dt-buttons, .dataTables_length, .dataTables_filter, .dataTables_info, .dataTables_paginate{
+    padding:10px;
+}
+</style>
+{% endblock stylesheets %}
+
+{% block script %}
+  {{ block.super }}
+        <script src="{% static 'plugins/jquery-ui/plugin.js' %}"></script>
+  <script>
+      requirejs(['jquery', 'jquery-ui'], function( $ ) {
+          //$('#id_report_date').val($.datepicker.formatDate('yy-mm-dd', new Date()));
+          var natDays = [
+                [1, 1, 'New Year'], //2014
+                [1, 20, 'Martin Luther King'], //2014
+                [2, 17, 'Washingtons Birthday'], //2014
+                [5, 26, 'Memorial Day'], //2014
+                [7, 4, 'Independence Day'], //2014
+                [8, 24, 'Labour Day'], //2014
+                [10, 14, 'Columbus Day'], //2013
+                [11, 11, 'Veterans Day'], //2013
+                [11, 28, 'Thanksgiving Day'], //2013
+                [12, 25, 'Christmas'] //2013
+          ];
+          function setMinDate(){
+                var current_date = new Date(); //alert(minDate.getDate() - (2));
+                var current_day = current_date.getDay();
+                if(current_day==0 ) return -3;
+                else if(current_day == 1) return -4;
+                else if(current_day == 2) return -5;
+                else return -2;
+          }
+          function nationalDays(date) {
+                for (i = 0; i < natDays.length; i++) {
+                    if (date.getMonth() == natDays[i][0] - 1 && date.getDate() == natDays[i][1]) {
+                        return [false, natDays[i][2] + '_day'];
+                    }
+                }
+                return [true, ''];
+          }
+          function noWeekendsOrHolidays(date) {
+                var noWeekend = $.datepicker.noWeekends(date);
+                return (noWeekend[0] ? nationalDays(date) : noWeekend);
+          }
+        $("#id_report_date").datepicker({
+            //minDate: -2, maxDate: "+0D", dateFormat: "yy-mm-dd",  beforeShowDay: $.datepicker.noWeekends
+                dateFormat: "yy-mm-dd",
+                maxDate: new Date(),
+                defaultDate: {{ report_date }},
+                setDate: {{ report_date }}//,
+                //beforeShowDay: $.datepicker.noWeekends //noWeekendsOrHolidays
+        }).attr("readonly", true);
+      });
+  </script>
+
+        <!-- Input Mask Plugin -->
+        <script src="{% static 'plugins/datatables/plugin.js' %}"></script>
+        <script>
+            requirejs( ["datatables.net","datatables.net-bs4","datatables.net-buttons","datatables.net-bs4-buttons","datatables-jszip","datatables-pdfmake","datatables-vfs_fonts","datatables-buttons-html5","datatables-buttons-print","datatables-buttons-colVis"], function(datatables) {
+
+                var table = $('#items').DataTable({
+                    dom: '<"row"<"col-md-5 col-lg-5 float-left"B><"col-md-1 col-lg-1 align-items-center"l><"col-md-6 col-lg-6 float-right"f>><"table-responsive"rt><"row"<"col-md-5 col-lg-5"i><"col-md-7 col-lg-7 float-right"p>><"clear">',//'Blfrtip',
+                    lengthChange: true,
+                    buttons: [
+                        {
+                            extend: 'copyHtml5',
+                            text: '<u>C</u>opy',
+                            className: 'btn-success',
+                            key: {
+                                key: 'c',
+                                altKey: true
+                            }
+                        },
+                        {
+                            extend: 'excelHtml5',
+                            text: '<u>E</u>xcel',
+                            className: 'btn-success',
+                            key: {
+                                key: 'e',
+                                altKey: true
+                            }
+                        },
+                        {
+                            extend: 'csvHtml5',
+                            text: 'C<u>s</u>v',
+                            className: 'btn-success',
+                            key: {
+                                key: 's',
+                                altKey: true
+                            }
+                        },
+                        {
+                            extend: 'print',
+                            text: '<u>P</u>rint',
+                            className: 'btn-success',
+                            key: {
+                                key: 'p',
+                                altKey: true
+                            }
+                        },
+                        {
+                            extend: 'colvis',
+                            text: 'C<u>o</u>lumn visibility',
+                            className: 'btn-success',
+                            key: {
+                                key: 'o',
+                                altKey: true
+                            }
+                        }
+                    ],
+                    initComplete: function () {
+                        this.api().columns([1, 2, 3, 4, 5, 6, 7]).every( function () {
+                            var column = this;
+                            var select = $('<select><option value="">Show all</option></select>')
+                                .appendTo( $(column.footer()).empty() )
+                                .on( 'change', function () {
+                                    var val = $.fn.dataTable.util.escapeRegex($(this).val());
+                                    column
+                                        .search( val ? '^'+val+'$' : '', true, false )
+                                        .draw();
+                                } );
+
+                            column.cells('', column[0]).render('display').sort().unique().each( function ( d, j ) {
+                                var val = $('<div/>').html(d).text();
+                                if(column.search() === '^'+d+'$'){
+                                    select.append( '<option value="' + val + '" selected="selected">' + val + '</option>' );
+                                } else {
+                                    select.append( '<option value="' + val + '">' + val + '</option>' );
+                                }
+                            } );
+                        } );
+                    }
+                });
+                table.search().draw();
+            } );
+        </script>
+{% endblock script %}
+
+{% block content %}
+            {% block page_header %}
+                {% include "warehouse/page_header.html" with page_title="Items" %}
+            {% endblock page_header %}
+                <div class="row row-cards row-deck">
+                  <div class="col-md-12 col-lg-12">
+                    <div class="card">
+                      <div class="card-header">
+                        <h3 class="card-title">Monthly report </h3>
+                      </div>
+                      <div class="card-body">
+                          <div class="row">
+                              <div class="col-lg-9 col-md-9 col-sm-6"></div>
+                              <div class="col-lg-3 col-md-3 col-sm-6">
+                                  <form method="post" id="reportForm" data-items-url="{% url 'warehouse_ajax_load_items' %}">
+                                      {% csrf_token %}
+                                      <div class="form-group">
+                                          <label class="form-label">Choose report date</label>
+                                          <div class="row gutters-xs">
+                                            <div class="col">
+                                              <input type="text" id="id_report_date" name="report_date" class="form-control bg-blue-dark text-white" placeholder="yyyy-mm-dd" value="{{ report_date }}" readonly>
+                                            </div>
+                                            <span class="col-auto">
+                                              <button class="btn btn-secondary" type="submit"><i class="fe fe-search"></i></button>
+                                            </span>
+                                          </div>
+                                      </div>
+                                  </form>
+                              </div>
+                          </div>
+                      </div>
+                      <div class="row">
+                        <table class="table table-striped table-bordered nowrap" id="items">
+                          <thead>
+                            <tr>
+                              <th class="w-1">No.</th>
+                              <th>Item</th>
+                              <th>Order number</th>
+                              <th>Requested by</th>
+                              <th>Department/AP</th>
+                              <th>Warehouse</th>
+                              <th>Quantity</th>
+                              <th>Price</th>
+                              <th>Total</th>
+                              <th>0-10 Day</th>
+                              <th>11-20 Day</th>
+                              <th>21-30 Day</th>
+                              <th>Over than 30 Day</th>
+                              <th>Comments</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {% for item in items %}
+                            <tr>
+                              <td><span class="text-muted"> {{ forloop.counter }} </span></td>
+                              <td> {{ item.item__item__name }} </td>
+                              <td> <a href="/warehouse/details/order/{{ item.order__number }}" class="text-inherit"> {{ item.order__number }} </a> </td>
+                              <td> {{ item.order__requester }}</td>
+                              <td><a href="/warehouse/details/office/{{ item.office_id }}" class="text-inherit"> {{ item.office__name}} </a></td>
+                              <td> {{ item.warehouse__short_name}}</td>
+                              <td> {{ item.count  |intcomma}} </td>
+                              <td> {{ item.price  |intcomma}} </td>
+                              <td> {{ item.total  |intcomma}}</td>
+                              <td> {% if item.days <= 10 %} {{ item.total  |intcomma}} {% endif %} </td>
+                              <td> {% if 10 < item.days and item.days <= 20 %} {{ item.total  |intcomma}} {% endif %} </td>
+                              <td> {% if 20 < item.days and item.days <= 30 %} {{ item.total  |intcomma}} {% endif %} </td>
+                              <td> {% if 30 < item.days %} {{ item.total }} {% endif %} </td>
+                              <td> {{ item.comments }}</td>
+                            </tr>
+                          {% empty %}
+                            <tr>
+                              <td colspan="10"><span class="text-muted"> No items are registered </span></td>
+                            </tr>
+                            {% endfor %}
+                          </tbody>
+                          <tfoot>
+                            <tr>
+                              <th class="w-1">No.</th>
+                              <th>Item</th>
+                              <th>Order number</th>
+                              <th>Requested by</th>
+                              <th>Department/AP</th>
+                              <th>Warehouse</th>
+                              <th>Quantity</th>
+                              <th>Price</th>
+                              <th>Total</th>
+                              <th>0-10 Day</th>
+                              <th>11-20 Day</th>
+                              <th>21-30 Day</th>
+                              <th>Over than 30 Day</th>
+                              <th>Comments</th>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+{% endblock content %}
+{% block javascripts %}
+  {{ block.super}}
+{% endblock javascripts %}

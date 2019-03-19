@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %} {{ SITE_URL }} Inventory Management System | Warehouse {% endblock title %}
+
+{% block stylesheets %}
+  {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/datatables/dataTables.bootstrap4.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/datatables/responsive.bootstrap4.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/datatables/dataTables.responsive.min.js' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/datatables/buttons.bootstrap4.min.css' %}">
+<style>
+.dt-buttons, .dataTables_length, .dataTables_filter, .dataTables_info, .dataTables_paginate{
+    padding:10px;
+}
+</style>
+{% endblock stylesheets %}
+
+{% block script %}
+  {{ block.super }}
+        <!-- Input Mask Plugin -->
+        <script src="{% static 'plugins/datatables/plugin.js' %}"></script>
+        <script>
+            requirejs( ["datatables.net","datatables.net-bs4","datatables.net-buttons","datatables.net-bs4-buttons","datatables-jszip","datatables-pdfmake","datatables-vfs_fonts","datatables-buttons-html5","datatables-buttons-print","datatables-buttons-colVis"], function(datatables) {
+
+                var table = $('#orders').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    ajax: {
+                        url: "{% url 'home_ajax_load_orders' %}",
+                        type: "POST"
+                    },
+                    columns: [
+                        { data: "department"},
+                        { data: "order_number"},
+                        { data: "item_code"},
+                        { data: "item_name"},
+                        { data: "requested_by"},
+                        { data: "ordered"},
+                        { data: "received"}
+                    ]
+                });
+                table.search().draw();
+            } );
+        </script>
+{% endblock script %}
+
+
+{% block content %}
+            {% block page_header %}
+                {% include "home/page_header.html" with page_title="Dashboard"%}
+            {% endblock page_header %}
+                <div class="row row-cards row-deck">
+                  <div class="col-md-12 col-lg-12">
+                    <div class="card">
+                      <div class="card-header">
+                        <h3 class="card-title">Purchase orders</h3>
+                      </div>
+                      <div class="table-responsive">
+                        <table class="table card-table table-vcenter table-striped table-bordered table-hover text-nowrap" id="orders">
+                          <thead>
+                            <tr>
+                              <th class="w-1">No.</th>
+                              <th>Department</th>
+                              <th data-class-name="priority">PO number</th>
+                              <th data-class-name="priority">Item code</th>
+                              <th data-class-name="priority">Item name</th>
+                              <th>Requested by</th>
+                              <th>Ordered</th>
+                              <th>Received</th>
+                            </tr>
+                          </thead>
+                          <tfoot>
+                            <tr>
+                              <th class="w-1">No.</th>
+                              <th>Department</th>
+                              <th data-class-name="priority">PO number</th>
+                              <th data-class-name="priority">Item code</th>
+                              <th data-class-name="priority">Item name</th>
+                              <th>Requested by</th>
+                              <th>Ordered</th>
+                              <th>Received</th>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+{% endblock content %}
+{% block javascripts %}
+  {{ block.super}}
+{% endblock javascripts %}

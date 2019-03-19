@@ -1,0 +1,9 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ title }} | {{ 'WVIM - Inventory Management System' }}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}"><img src="/assets/images/wvi-logo.svg" class="header-brand-img" alt="wvim logo"></a></h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

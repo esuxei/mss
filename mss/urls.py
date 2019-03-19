@@ -18,4 +18,11 @@ from django.urls import path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-]
+    url(r'^', include('home.urls')),
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+#admin.site.login_form = home_views.login
+handler400 = home_views.error_400
+handler403 = home_views.error_403
+handler404 = home_views.error_404
+handler500 = home_views.error_500

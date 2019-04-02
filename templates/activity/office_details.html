@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %} Inventory Management System | Warehouse {% endblock title %}
+
+{% block stylesheets %}
+  {{ block.super }}
+{% endblock stylesheets %}
+
+{% block content %}
+<div class="card">
+              <div class="card-header">
+                <h3 class="card-title">PO Number: {{ order.number }}</h3>
+                <div class="card-options">
+                  <button type="button" class="btn btn-primary btn-sm" onclick="javascript:window.print();"><i class="si si-printer"></i> Print </button>
+                  <button type="button" class="btn btn-orange btn-sm ml-2" onclick="location.href='{% url "warehouse_index" %}'"><i class="si si-arrow-left"></i> Back </button>
+                </div>
+
+              </div>
+              <div class="card-body">
+                <div class="row my-8">
+                  <div class="col-6">
+                    <p class="h3">{{office.name }}</p>
+                    <address>
+                      T0 code: {{ office.t0 }} <br />
+                      T1 code: {{ office.t1 }}
+                    </address>
+                  </div>
+                  <div class="col-6 text-right">
+                    <p class="h3">Address</p>
+                    <address>
+                        Telephone: {{ office.telephone }} <br />
+                        Address: {{ office.Address }} <br />
+
+                    </address>
+                  </div>
+                </div>
+                <div class="table-responsive push">
+                  <table class="table table-bordered table-hover">
+                      <tbody>
+                        <tr>
+                          <th class="text-center" style="width: 5%">No</th>
+                          <th style="width: 30%">Name</th>
+                          <th class="text-center" style="width: 65%">Address</th>
+                        </tr>
+                        {% for warehouse in warehouses %}
+                        <tr>
+                          <td><span class="text-muted"> {{ forloop.counter }} </span></td>
+                          <td>{{ warehouse.name }} </td>
+                          <td> {{ warehouse.address }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                          <td colspan="3"><span class="text-muted"> Warehouse not found </span></td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                  </table>
+                </div>
+                <p class="text-muted text-center"></p>
+              </div>
+            </div>
+{% endblock content %}
+{% block javascripts %}
+  {{ block.super}}
+    <!-- Chart.js
+  <script src="/static/vendors/Chart.js/dist/Chart.min.js"></script>
+    -->
+{% endblock javascripts %}

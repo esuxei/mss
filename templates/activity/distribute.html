@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %} Inventory Management System | Warehouse {% endblock title %}
+
+{% block stylesheets %}
+  {{ block.super }}
+    <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.js"></script>
+	<style type="text/css" class="init">
+.dataTables_length, .dataTables_filter, .dataTables_info, .dataTables_paginate {
+    padding:10px;
+}
+	</style>
+{% endblock stylesheets %}
+
+{% block content %}
+            {% block page_header %}
+                {% include "warehouse/page_header.html" with page_title="By order items" %}
+            {% endblock page_header %}
+                <div class="row row-cards row-deck">
+                  <div class="col-md-12 col-lg-12">
+                    <div class="card">
+                      <div class="card-header">
+                        <h3 class="card-title">Recent Orders</h3>
+                      </div>
+                      <div class="table-responsive">
+                        <table class="table card-table table-vcenter text-nowrap stripe hover" id="orders" data-order='[[ 1, "asc" ]]' data-page-length='3'>
+                          <thead>
+                            <tr>
+                              <th class="w-1">No.</th>
+                              <th>Department</th>
+                              <th>PO number</th>
+                              <th>Requested by</th>
+                              <th>Status</th>
+                              <th>Received on</th>
+                              <th>Received</th>
+                              <th>Actions</th>
+                              <th></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {% for order in orders %}
+                            <tr>
+                              <td><span class="text-muted"> {{ forloop.counter }} </span></td>
+                              <td><a href="{{ url  }}/{{ order.id }}" class="text-inherit"> {{ order.department }} </a></td>
+                              <td> {{ order.po_number }}</td>
+                              <td> {{ order.requester }}</td>
+                              <td> {{ order.receipt_date }}</td>
+                              <td> {{ order.get_location_status_display }}</td>
+                              <td> {{ order.received }}</td>
+                              <td class="text-right">
+                                <a href="javascript:void(0)" class="btn btn-secondary btn-sm">Receive</a>
+                                <div class="dropdown">
+                                  <button class="btn btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown">Actions</button>
+                                </div>
+                              </td>
+                              <td>
+                                <a class="icon" href="javascript:void(0)">
+                                  <i class="fe fe-edit"></i>
+                                </a>
+                              </td>
+                            </tr>
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+{% endblock content %}
+{% block javascripts %}
+  {{ block.super}}
+    <!-- Chart.js
+  <script src="/static/vendors/Chart.js/dist/Chart.min.js"></script>
+    -->
+   <script>
+    $(document).ready(function() {
+    $('#orders').DataTable();
+        ordering: true
+        select: true
+} );
+    </script>
+{% endblock javascripts %}

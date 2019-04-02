@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+{% block title %} Inventory Management System | Warehouse {% endblock title %}
+
+{% block stylesheets %}
+  {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/datatables/dataTables.bootstrap4.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/datatables/responsive.bootstrap4.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/datatables/dataTables.responsive.min.js' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'plugins/datatables/buttons.bootstrap4.min.css' %}">
+<style>
+.dt-buttons, .dataTables_length, .dataTables_filter, .dataTables_info, .dataTables_paginate{
+    padding:10px;
+}
+</style>
+{% endblock stylesheets %}
+
+{% block script %}
+  {{ block.super }}
+        <!-- Input Mask Plugin -->
+        <script src="{% static 'plugins/datatables/plugin.js' %}"></script>
+        <script>
+            requirejs( ["datatables.net","datatables.net-bs4","datatables.net-buttons","datatables.net-bs4-buttons","datatables-jszip","datatables-pdfmake","datatables-vfs_fonts","datatables-buttons-html5","datatables-buttons-print","datatables-buttons-colVis"], function(datatables) {
+
+                var table = $('#items').DataTable({
+                    dom: '<"row"<"col-md-5 col-lg-5 float-left"B><"col-md-1 col-lg-1 align-items-center"l><"col-md-6 col-lg-6 float-right"f>><"table-responsive"rt><"row"<"col-md-5 col-lg-5"i><"col-md-7 col-lg-7 float-right"p>><"clear">',//'Blfrtip',
+                    lengthChange: true,
+                    buttons: [
+                        {
+                            extend: 'copyHtml5',
+                            text: '<u>C</u>opy',
+                            className: 'btn-success',
+                            key: {
+                                key: 'c',
+                                altKey: true
+                            }
+                        },
+                        {
+                            extend: 'excelHtml5',
+                            text: '<u>E</u>xcel',
+                            className: 'btn-success',
+                            key: {
+                                key: 'e',
+                                altKey: true
+                            }
+                        },
+                        {
+                            extend: 'csvHtml5',
+                            text: 'C<u>s</u>v',
+                            className: 'btn-success',
+                            key: {
+                                key: 's',
+                                altKey: true
+                            }
+                        },
+                        {
+                            extend: 'print',
+                            text: '<u>P</u>rint',
+                            className: 'btn-success',
+                            key: {
+                                key: 'p',
+                                altKey: true
+                            }
+                        },
+                        {
+                            extend: 'colvis',
+                            text: 'C<u>o</u>lumn visibility',
+                            className: 'btn-success',
+                            key: {
+                                key: 'o',
+                                altKey: true
+                            }
+                        }
+                    ],
+                    initComplete: function () {
+                        this.api().columns([1, 2, 3, 4]).every( function () {
+                            var column = this;
+                            var select = $('<select><option value="">Show all</option></select>')
+                                .appendTo( $(column.footer()).empty() )
+                                .on( 'change', function () {
+                                    var val = $.fn.dataTable.util.escapeRegex($(this).val());
+                                    column
+                                        .search( val ? '^'+val+'$' : '', true, false )
+                                        .draw();
+                                } );
+
+                            column.cells('', column[0]).render('display').sort().unique().each( function ( d, j ) {
+                                var val = $('<div/>').html(d).text();
+                                if(column.search() === '^'+d+'$'){
+                                    select.append( '<option value="' + val + '" selected="selected">' + val + '</option>' );
+                                } else {
+                                    select.append( '<option value="' + val + '">' + val + '</option>' );
+                                }
+                            } );
+                        } );
+                    }
+                });
+                table.search().draw();
+            } );
+        </script>
+{% endblock script %}
+
+{% block content %}
+            {% block page_header %}
+                {% include "warehouse/page_header.html" with page_title="Items" %}
+            {% endblock page_header %}
+                <div class="row row-cards row-deck">
+                  <div class="col-md-12 col-lg-12">
+                    <div class="card">
+                      <div class="card-header">
+                        <h3 class="card-title">Items in Central warehouse</h3>
+                      </div>
+                      <div class="table-responsive">
+                        <table class="table card-table table-vcenter table-striped table-bordered table-hover text-nowrap" id="items">
+                          <thead>
+                            <tr>
+                              <th class="w-1">No.</th>
+                              <th>Department</th>
+                              <th>Order No</th>
+                              <th>Requester</th>
+                              <th>Item name</th>
+                              <th>Quantity</th>
+                              <th>Price</th>
+                              <th>Unit</th>
+                              <th>Total</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {% for item in items %}
+                                    <tr>
+                                      <td><span class="text-muted"> {{ forloop.counter }} </span></td>
+                                      <td><a href="/warehouse/details/office/{{ item.office_id }}" class="text-inherit"> {{ item.office__name }} </a></td>
+                                        <td> <a href="/warehouse/details/order/{{ item.order__number }}" class="text-inherit"> <small class="text-sm-left">{{ item.order__number  }}</small></a> </td>
+                                      <td> {{ item.order__requester }}</td>
+                                      <td><a href="/warehouse/details/item/{{ item.item__item__code }}" class="text-inherit"> {{ item.item__item__name }} </a></td>
+                                      <td>
+                                          {{ item.count  |intcomma}}
+                                      </td>
+                                      <td> {{ item.price  |intcomma}} </td>
+                                      <td> {{ item.item__item__unit }} </td>
+                                      <td> {{ item.total  |intcomma}}</td>
+                                    </tr>
+                          {% empty %}
+                            <tr>
+                              <td colspan="9"><span class="text-muted"> No items are registered </span></td>
+                            </tr>
+                            {% endfor %}
+                          </tbody>
+                          <tfoot>
+                            <tr>
+                              <th class="w-1">No.</th>
+                              <th>Department</th>
+                              <th>Order No</th>
+                              <th>Requester</th>
+                              <th>Item name</th>
+                              <th>Quantity</th>
+                              <th>Price</th>
+                              <th>Unit</th>
+                              <th>Total</th>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+{% endblock content %}
+{% block javascripts %}
+  {{ block.super}}
+{% endblock javascripts %}
